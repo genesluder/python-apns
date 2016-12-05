@@ -22,20 +22,38 @@ Create a client::
 
     from gobiko.apns import APNsClient
     
-    client = APNsClient(team_id=TEAM_ID, bundle_id=BUNDLE_ID, auth_key_id=APNS_KEY_ID, auth_key_filepath=APNS_KEY_FILEPATH, use_sandbox=True)
+    client = APNsClient(
+        team_id=TEAM_ID, 
+        bundle_id=BUNDLE_ID, 
+        auth_key_id=APNS_KEY_ID, 
+        auth_key_filepath=APNS_KEY_FILEPATH, 
+        use_sandbox=True
+    )
 
 
 Alternatively, you can create a client with the contents of the auth key file directly::
 
-    client = APNsClient(team_id=TEAM_ID, bundle_id=BUNDLE_ID, auth_key_id=APNS_KEY_ID, auth_key=APNS_KEY, use_sandbox=True)
+    client = APNsClient(
+        team_id=TEAM_ID, 
+        bundle_id=BUNDLE_ID, 
+        auth_key_id=APNS_KEY_ID, 
+        auth_key=APNS_KEY, 
+        use_sandbox=True
+    )
 
 Now you can send a message to a device by specifying its registration ID::
 
-    client.send_message(registration_id, "All your base are belong to us.")
+    client.send_message(
+        registration_id, 
+        "All your base are belong to us."
+    )
 
 Or you can send bulk messages to a list of devices::
 
-    client.send_bulk_message([registration_id_1, registration_id_2], "You have no chance to survive, make your time.")
+    client.send_bulk_message(
+        [registration_id_1, registration_id_2], 
+        "You have no chance to survive, make your time."
+    )
 
 
 Documentation
