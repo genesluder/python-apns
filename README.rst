@@ -56,9 +56,55 @@ Or you can send bulk messages to a list of devices::
     )
 
 
+Payload
+-----------------
+
+Additional APNs payload values can be passed as kwargs::
+
+    client.send_message(
+        registration_id, 
+        "All your base are belong to us.", 
+        badge=None, 
+        sound=None, 
+        category=None, 
+        content_available=False,
+        action_loc_key=None, 
+        loc_key=None, 
+        loc_args=[], 
+        extra={}, 
+        identifier=None, 
+        expiration=None, 
+        priority=10, 
+        topic=None
+    )
+
+
+Pruning
+-----------------
+
+The legacy binary interface APNs provided an endpoint to check whether a registration ID had 
+become inactive. Now the service returns a BadDeviceToken error when you attempt to deliver an 
+alert to an inactive registration ID. If you need to prune inactive IDs from a database you 
+can handle the BadDeviceToken exception to do so::
+
+    from gobiko.apns.exceptions import BadDeviceToken
+
+    try:
+        client.send_message(OLD_REGISTRATION_ID, "Message to an invalid registration ID.")
+    except BadDeviceToken:
+        # Handle invalid ID here
+        pass
+
+
 Documentation
 -----------------
 
 - More information on APNs and an explanation of the above can be found `in this blog post <http://gobiko.com/blog/token-based-authentication-http2-example-apns/>`_.
 
 - Apple documentation for APNs can be found `here <https://developer.apple.com/library/content/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/APNSOverview.html#//apple_ref/doc/uid/TP40008194-CH8-SW1>`_.
+
+
+Credits
+-----------------
+
+
