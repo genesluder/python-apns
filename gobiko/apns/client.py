@@ -7,7 +7,7 @@ import uuid
 
 from collections import namedtuple
 from contextlib import closing
-from hyper import HTTPConnection
+from hyper import HTTP20Connection
 
 from .exceptions import InternalException, ImproperlyConfigured, PayloadTooLarge
 from .utils import validate_private_key
@@ -36,7 +36,7 @@ APNSResponse = APNSResponseStruct(**APNS_RESPONSE_CODES)
 class APNsClient(object):
 
     def __init__(self, team_id, auth_key_id, 
-            auth_key=None, auth_key_filepath=None, bundle_id=None, use_sandbox=False
+            auth_key=None, auth_key_filepath=None, bundle_id=None, use_sandbox=False, force_proto=None
         ):
 
         if not (auth_key_filepath or auth_key):
@@ -57,6 +57,7 @@ class APNsClient(object):
         self.bundle_id = bundle_id
         self.auth_key = auth_key
         self.auth_key_id = auth_key_id
+        self.force_proto = force_proto
         self.host = SANDBOX_HOST if use_sandbox else PRODUCTION_HOST
 
     def send_message(self, registration_id, alert, **kwargs):
@@ -75,7 +76,7 @@ class APNsClient(object):
         return res
 
     def _create_connection(self):
-        return HTTPConnection(self.host)
+        return HTTP20Connection(self.host, force_proto=self.force_proto)
 
     def _create_token(self):
         token = jwt.encode(
