@@ -10,7 +10,7 @@ from contextlib import closing
 from hyper import HTTP20Connection
 
 from .exceptions import InternalException, ImproperlyConfigured, PayloadTooLarge
-from .utils import validate_private_key
+from .utils import validate_private_key, wrap_private_key
 
 
 ALGORITHM = 'ES256'
@@ -48,10 +48,12 @@ class APNsClient(object):
             try:
                 with open(auth_key_filepath, "r") as f:
                     auth_key = f.read()
+
             except Exception as e:
                 raise ImproperlyConfigured("The APNS auth key file at %r is not readable: %s" % (auth_key_filepath, e))
 
         validate_private_key(auth_key)
+        auth_key = wrap_private_key(auth_key) # Some have had issues with keys that aren't wrappd to 64 lines
 
         self.team_id = team_id
         self.bundle_id = bundle_id
