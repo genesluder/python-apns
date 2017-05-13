@@ -17,7 +17,6 @@ setup(
   ],
   classifiers = [],
   install_requires=[
-    'cryptography',
     'hyper',
     'pyjwt',
   ],
