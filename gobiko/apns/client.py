@@ -1,4 +1,3 @@
-
 import importlib
 import json
 import jwt
@@ -9,7 +8,13 @@ from collections import namedtuple
 from contextlib import closing
 from hyper import HTTP20Connection
 
-from .exceptions import InternalException, ImproperlyConfigured, PayloadTooLarge
+from .exceptions import (
+    InternalException,
+    ImproperlyConfigured,
+    PayloadTooLarge,
+    BadDeviceToken
+)
+
 from .utils import validate_private_key, wrap_private_key
 
 
@@ -66,16 +71,37 @@ class APNsClient(object):
         return self._send_message(registration_id, alert, **kwargs)
 
     def send_bulk_message(self, registration_ids, alert, **kwargs):
+        good_registration_ids = []
+        bad_registration_ids = []
+
         with closing(self._create_connection()) as connection:
             for registration_id in registration_ids:
                 try:
                     res = self._send_message(registration_id, alert, connection=connection, **kwargs)
+                    good_registration_ids.append(registration_id)
                 except:
-                    # In most cases a single failure here should not prevent 
-                    # the loop to continue 
-                    # TODO: Support for differnet exceptions here
-                    pass
-        return res
+                    bad_registration_ids.append(registration_id)
+
+        if not bad_registration_ids:
+            return res
+
+        if not good_registration_ids:
+            raise BadDeviceToken("None of the registration ids were accepted"
+                                 "Rerun individual ids with ``send_message()``"
+                                 "to get more details about why")
+
+        if bad_registration_ids and good_registration_ids:
+            raise PartialBulkMessage(
+                "Some of the registration ids were accepted. Rerun individual "
+                "ids with ``send_message()`` to get more details about why. "
+                "The ones that failed: \n:"
+                "{bad_string}\n"
+                "The ones that were pushed successfully: \n:"
+                "{good_string}\n".format(
+                    bad_string="\n".join(bad_registration_ids),
+                    good_string = "\n".join(good_registration_ids)
+                )
+            )
 
     def _create_connection(self):
         return HTTP20Connection(self.host, force_proto=self.force_proto)
