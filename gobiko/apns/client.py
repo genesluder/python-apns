@@ -100,7 +100,8 @@ class APNsClient(object):
                 "{good_string}\n".format(
                     bad_string="\n".join(bad_registration_ids),
                     good_string = "\n".join(good_registration_ids)
-                )
+                ),
+                bad_registration_ids
             )
 
     def _create_connection(self):
