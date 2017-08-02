@@ -31,6 +31,10 @@ class BadMessageId(APNsException):
     "The apns-id value is bad."
     pass
 
+class PartialBulkMessage(APNsException):
+    def __init__(self, message, bad_registration_ids):
+        super(APNsException, self).__init__(message)
+        self.bad_registration_ids = bad_registration_ids
 
 class BadPriority(APNsException):
     "The apns-priority value is bad."
