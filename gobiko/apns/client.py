@@ -12,7 +12,8 @@ from .exceptions import (
     InternalException,
     ImproperlyConfigured,
     PayloadTooLarge,
-    BadDeviceToken
+    BadDeviceToken,
+    PartialBulkMessage
 )
 
 from .utils import validate_private_key, wrap_private_key
