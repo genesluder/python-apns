@@ -163,7 +163,7 @@ class APNsClient(object):
             aps_data["content-available"] = 1
 
         if mutable_content:
-            aps_data["mutable_content"] = 1
+            aps_data["mutable-content"] = 1
 
         data["aps"] = aps_data
         data.update(extra)
