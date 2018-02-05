@@ -12,7 +12,8 @@ from .exceptions import (
     InternalException,
     ImproperlyConfigured,
     PayloadTooLarge,
-    BadDeviceToken
+    BadDeviceToken,
+    PartialBulkMessage
 )
 
 from .utils import validate_private_key, wrap_private_key
@@ -124,6 +125,7 @@ class APNsClient(object):
 
     def _send_message(self, registration_id, alert, 
             badge=None, sound=None, category=None, content_available=False,
+            mutable_content=False,
             action_loc_key=None, loc_key=None, loc_args=[], extra={}, 
             identifier=None, expiration=None, priority=10, 
             connection=None, auth_token=None, bundle_id=None, topic=None
@@ -159,6 +161,9 @@ class APNsClient(object):
 
         if content_available:
             aps_data["content-available"] = 1
+
+        if mutable_content:
+            aps_data["mutable-content"] = 1
 
         data["aps"] = aps_data
         data.update(extra)
