@@ -106,6 +106,16 @@ can handle the BadDeviceToken exception to do so::
         # Handle invalid ID here
         pass
 
+Same approach if sending by bulk::
+
+    from gobiko.apns.exceptions import PartialBulkMessage
+    
+    try:
+        client.send_bulk_message([registration_id1, registration_id2], "Message")
+    except PartialBulkMessage as e:
+        # Handle list of invalid IDs using e.bad_registration_ids
+        pass
+
 
 Documentation
 -----------------
