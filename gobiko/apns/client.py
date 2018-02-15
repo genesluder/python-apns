@@ -42,7 +42,7 @@ APNSResponse = APNSResponseStruct(**APNS_RESPONSE_CODES)
 class APNsClient(object):
 
     def __init__(self, team_id, auth_key_id, 
-            auth_key=None, auth_key_filepath=None, bundle_id=None, use_sandbox=False, force_proto=None
+            auth_key=None, auth_key_filepath=None, bundle_id=None, use_sandbox=False, force_proto=None, wrap_key=False
         ):
 
         if not (auth_key_filepath or auth_key):
@@ -59,7 +59,8 @@ class APNsClient(object):
                 raise ImproperlyConfigured("The APNS auth key file at %r is not readable: %s" % (auth_key_filepath, e))
 
         validate_private_key(auth_key)
-        auth_key = wrap_private_key(auth_key) # Some have had issues with keys that aren't wrappd to 64 lines
+        if wrap_key:
+            auth_key = wrap_private_key(auth_key) # Some have had issues with keys that aren't wrappd to 64 lines
 
         self.team_id = team_id
         self.bundle_id = bundle_id
