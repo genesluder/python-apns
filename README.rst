@@ -41,6 +41,17 @@ Alternatively, you can create a client with the contents of the auth key file di
         use_sandbox=True
     )
 
+If you run into any problems deserializing the key, try wrapping it to 64 lines::
+
+    client = APNsClient(
+        team_id=TEAM_ID,
+        bundle_id=BUNDLE_ID,
+        auth_key_id=APNS_KEY_ID,
+        auth_key=APNS_KEY,
+        use_sandbox=True,
+        wrap_key=True
+    )
+
 In Python 2.x environments, you may need to force the communication protocol to 'h2'::
 
     client = APNsClient(
