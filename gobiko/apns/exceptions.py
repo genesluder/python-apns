@@ -1,7 +1,8 @@
 
 
 class APNsException(Exception):
-    pass
+    def __str__(self):
+        return '{e.__class__.__name__}: {e.__doc__}'.format(e=self)
 
 
 class InternalException(APNsException):
