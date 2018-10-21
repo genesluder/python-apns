@@ -35,7 +35,7 @@ APNS_RESPONSE_CODES = {
     'InternalServerError': 500, 
     'ServerUnavailable': 503,
 }
-APNSResponseStruct = namedtuple('APNSResponseStruct', ' '.join(APNS_RESPONSE_CODES.keys()))
+APNSResponseStruct = namedtuple('APNSResponseStruct', APNS_RESPONSE_CODES.keys())
 APNSResponse = APNSResponseStruct(**APNS_RESPONSE_CODES)
 
 
@@ -87,12 +87,12 @@ class APNsClient(object):
         if not bad_registration_ids:
             return res
 
-        if not good_registration_ids:
+        elif not good_registration_ids:
             raise BadDeviceToken("None of the registration ids were accepted"
                                  "Rerun individual ids with ``send_message()``"
                                  "to get more details about why")
 
-        if bad_registration_ids and good_registration_ids:
+        else:
             raise PartialBulkMessage(
                 "Some of the registration ids were accepted. Rerun individual "
                 "ids with ``send_message()`` to get more details about why. "
@@ -131,7 +131,8 @@ class APNsClient(object):
             identifier=None, expiration=None, priority=10, 
             connection=None, auth_token=None, bundle_id=None, topic=None
         ):
-        if not (topic or bundle_id or self.bundle_id):
+        topic = topic or bundle_id or self.bundle_id
+        if not topic:
             raise ImproperlyConfigured(
                 'You must provide your bundle_id if you do not specify a topic'
             )
@@ -180,19 +181,13 @@ class APNsClient(object):
 
         auth_token = auth_token or self._create_token()
 
-        if not topic:
-            topic = bundle_id if bundle_id else self.bundle_id
-
         request_headers = {
             'apns-expiration': str(expiration_time),
+            'apns-id': str(identifier or uuid.uuid4())
             'apns-priority': str(priority),
             'apns-topic': topic,
             'authorization': 'bearer {0}'.format(auth_token)
         }
-
-        if not identifier:
-            identifier = uuid.uuid4()
-        request_headers['apns-id'] = str(identifier)
 
         if connection:
             response = self._send_push_request(connection, registration_id, json_data, request_headers)
@@ -213,16 +208,15 @@ class APNsClient(object):
 
         if response.status != APNSResponse.Success:
             body = json.loads(response.read().decode('utf-8'))
-            reason = body["reason"] if "reason" in body else None
+            reason = body.get("reason")
 
             if reason:
                 exceptions_module = importlib.import_module("gobiko.apns.exceptions")
-                ExceptionClass = None
                 try:
-                    ExceptionClass = getattr(exceptions_module, reason)
+                    exception_class = getattr(exceptions_module, reason)
                 except AttributeError:
-                    ExceptionClass = InternalException
-                raise ExceptionClass()
+                    raise InternalException
+                else:
+                    raise exception_class
 
         return True
-
