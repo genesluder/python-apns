@@ -212,7 +212,6 @@ class APNsClient(object):
         response = connection.get_response()
 
         if response.status != APNSResponse.Success:
-            identifier = response.headers['apns-id']
             body = json.loads(response.read().decode('utf-8'))
             reason = body["reason"] if "reason" in body else None
 
