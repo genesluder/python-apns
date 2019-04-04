@@ -165,10 +165,11 @@ class APNsClient(object):
 
         if mutable_content:
             aps_data["mutable-content"] = 1
+            
+        aps_data.update(extra)
 
         data["aps"] = aps_data
-        data.update(extra)
-
+       # data.update(extra) the "extra" key needs to be inside the "aps" key.
         # Convert to json, avoiding unnecessary whitespace with separators (keys sorted for tests)
         json_data = json.dumps(data, separators=(",", ":"), sort_keys=True).encode("utf-8")
 
