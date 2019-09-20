@@ -129,11 +129,17 @@ class APNsClient(object):
             mutable_content=False,
             action_loc_key=None, loc_key=None, loc_args=[], extra={}, 
             identifier=None, expiration=None, priority=10, 
-            connection=None, auth_token=None, bundle_id=None, topic=None
+            connection=None, auth_token=None, bundle_id=None, topic=None, 
+            push_type='background'
         ):
         if not (topic or bundle_id or self.bundle_id):
             raise ImproperlyConfigured(
                 'You must provide your bundle_id if you do not specify a topic'
+            )
+        
+        if not push_type in ['alert', 'silent']:
+            raise ImproperlyConfigured(
+                'You must provide push_type with either a "alert" or "background" type'
             )
 
         data = {}
@@ -188,6 +194,7 @@ class APNsClient(object):
             'apns-priority': str(priority),
             'apns-topic': topic,
             'authorization': 'bearer {0}'.format(auth_token)
+            'apns-push-type': push_type
         }
 
         if not identifier:
