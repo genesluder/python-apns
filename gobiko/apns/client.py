@@ -193,7 +193,7 @@ class APNsClient(object):
             'apns-expiration': str(expiration_time),
             'apns-priority': str(priority),
             'apns-topic': topic,
-            'authorization': 'bearer {0}'.format(auth_token)
+            'authorization': 'bearer {0}'.format(auth_token),
             'apns-push-type': push_type
         }
 
