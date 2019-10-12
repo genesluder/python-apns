@@ -212,11 +212,7 @@ class APNsClient(object):
 
             if reason:
                 exceptions_module = importlib.import_module("gobiko.apns.exceptions")
-                try:
-                    exception_class = getattr(exceptions_module, reason)
-                except AttributeError:
-                    raise InternalException
-                else:
-                    raise exception_class
+                # get exception class by name
+                raise getattr(exceptions_module, reason, InternalException)
 
         return True
