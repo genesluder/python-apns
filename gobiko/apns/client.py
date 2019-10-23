@@ -77,9 +77,11 @@ class APNsClient(object):
         bad_registration_ids = []
 
         with closing(self._create_connection()) as connection:
+            auth_token = self._create_token()
+
             for registration_id in registration_ids:
                 try:
-                    res = self._send_message(registration_id, alert, connection=connection, **kwargs)
+                    res = self._send_message(registration_id, alert, connection=connection, auth_token=auth_token, **kwargs)
                     good_registration_ids.append(registration_id)
                 except:
                     bad_registration_ids.append(registration_id)
