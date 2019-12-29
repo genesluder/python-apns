@@ -185,7 +185,7 @@ class APNsClient(object):
 
         request_headers = {
             'apns-expiration': str(expiration_time),
-            'apns-id': str(identifier or uuid.uuid4())
+            'apns-id': str(identifier or uuid.uuid4()),
             'apns-priority': str(priority),
             'apns-topic': topic,
             'authorization': 'bearer {0}'.format(auth_token)
