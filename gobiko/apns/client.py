@@ -108,12 +108,10 @@ class APNsClient(object):
                 bad_registration_ids
             )
 
-    @staticmethod
     def get_token_from_cache():
         """Do not use cache by default, just provide the function to be easily overridden"""
         return None
 
-    @staticmethod
     def set_token_to_cache(token):
         """Do not use cache by default, just provide the function to be easily overridden"""
         pass
