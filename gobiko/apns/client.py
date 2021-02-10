@@ -112,11 +112,11 @@ class APNsClient(object):
                 bad_registration_ids
             )
 
-    def get_token_from_cache():
+    def get_token_from_cache(self):
         """Do not use cache by default, just provide the function to be easily overridden"""
         return None
 
-    def set_token_to_cache(token):
+    def set_token_to_cache(self, token):
         """Do not use cache by default, just provide the function to be easily overridden"""
         pass
 
@@ -145,7 +145,7 @@ class APNsClient(object):
                 'kid': self.auth_key_id,
             }
         )
-        return token.decode('ascii')
+        return token
 
     def _send_message(self, registration_id, alert, 
             badge=None, sound=None, category=None, content_available=False,
