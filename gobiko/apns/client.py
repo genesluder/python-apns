@@ -81,7 +81,7 @@ class APNsClient(object):
         bad_registration_ids = []
 
         with closing(self._create_connection()) as connection:
-            auth_token = self._create_token()
+            auth_token = self._get_token()
 
             for registration_id in registration_ids:
                 try:
@@ -111,6 +111,23 @@ class APNsClient(object):
                 ),
                 bad_registration_ids
             )
+
+    def get_token_from_cache():
+        """Do not use cache by default, just provide the function to be easily overridden"""
+        return None
+
+    def set_token_to_cache(token):
+        """Do not use cache by default, just provide the function to be easily overridden"""
+        pass
+
+    def _get_token(self):
+        token = self.get_token_from_cache()
+
+        if token is None:
+            token = self._create_token()
+            self.set_token_to_cache(token)
+
+        return token
 
     def _create_connection(self):
         return HTTP20Connection(self.host, force_proto=self.force_proto)
@@ -191,7 +208,7 @@ class APNsClient(object):
         # If expiration isn't specified use 1 month from now
         expiration_time = expiration if expiration is not None else int(time.time()) + 2592000
 
-        auth_token = auth_token or self._create_token()
+        auth_token = auth_token or self._get_token()
 
         request_headers = {
             'apns-expiration': str(expiration_time),
