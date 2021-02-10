@@ -13,6 +13,10 @@ class ImproperlyConfigured(APNsException):
     pass
 
 
+class InvalidPushType(APNsException):
+    pass
+
+
 class BadCollapseId(APNsException):
     "The collapse identifier exceeds the maximum allowed size"
     pass

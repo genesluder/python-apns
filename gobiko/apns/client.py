@@ -13,7 +13,9 @@ from .exceptions import (
     ImproperlyConfigured,
     PayloadTooLarge,
     BadDeviceToken,
-    PartialBulkMessage
+    PartialBulkMessage,
+    BadTopic,
+    InvalidPushType,
 )
 
 from .utils import validate_private_key, wrap_private_key
@@ -23,6 +25,8 @@ ALGORITHM = 'ES256'
 SANDBOX_HOST = 'api.development.push.apple.com:443'
 PRODUCTION_HOST = 'api.push.apple.com:443'
 MAX_NOTIFICATION_SIZE = 4096
+
+APNS_PUSH_TYPES = ('alert', 'background', 'voip', 'complication', 'fileprovider', 'mdm')
 
 APNS_RESPONSE_CODES = {
     'Success': 200,
@@ -131,13 +135,19 @@ class APNsClient(object):
             mutable_content=False,
             action_loc_key=None, loc_key=None, loc_args=[], extra={}, 
             identifier=None, expiration=None, priority=10, 
-            connection=None, auth_token=None, bundle_id=None, topic=None
+            connection=None, auth_token=None, bundle_id=None, topic=None, push_type='alert'
         ):
         topic = topic or bundle_id or self.bundle_id
         if not topic:
             raise ImproperlyConfigured(
                 'You must provide your bundle_id if you do not specify a topic'
             )
+
+        if push_type not in APNS_PUSH_TYPES:
+            raise InvalidPushType('The push-type provided is not valid')
+
+        if push_type == 'voip' and not topic.endswith('.voip'):
+            raise BadTopic('Topic should be in the format <bundle_id>.voip when using voip push_type')
 
         data = {}
         aps_data = {}
@@ -188,6 +198,7 @@ class APNsClient(object):
             'apns-id': str(identifier or uuid.uuid4()),
             'apns-priority': str(priority),
             'apns-topic': topic,
+            'apns-push-type': push_type,
             'authorization': 'bearer {0}'.format(auth_token)
         }
 
