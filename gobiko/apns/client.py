@@ -13,7 +13,9 @@ from .exceptions import (
     ImproperlyConfigured,
     PayloadTooLarge,
     BadDeviceToken,
-    PartialBulkMessage
+    PartialBulkMessage,
+    BadTopic,
+    InvalidPushType,
 )
 
 from .utils import validate_private_key, wrap_private_key
@@ -23,6 +25,8 @@ ALGORITHM = 'ES256'
 SANDBOX_HOST = 'api.development.push.apple.com:443'
 PRODUCTION_HOST = 'api.push.apple.com:443'
 MAX_NOTIFICATION_SIZE = 4096
+
+APNS_PUSH_TYPES = ('alert', 'background', 'voip', 'complication', 'fileprovider', 'mdm')
 
 APNS_RESPONSE_CODES = {
     'Success': 200,
@@ -35,7 +39,7 @@ APNS_RESPONSE_CODES = {
     'InternalServerError': 500, 
     'ServerUnavailable': 503,
 }
-APNSResponseStruct = namedtuple('APNSResponseStruct', ' '.join(APNS_RESPONSE_CODES.keys()))
+APNSResponseStruct = namedtuple('APNSResponseStruct', APNS_RESPONSE_CODES.keys())
 APNSResponse = APNSResponseStruct(**APNS_RESPONSE_CODES)
 
 
@@ -77,9 +81,11 @@ class APNsClient(object):
         bad_registration_ids = []
 
         with closing(self._create_connection()) as connection:
+            auth_token = self._get_token()
+
             for registration_id in registration_ids:
                 try:
-                    res = self._send_message(registration_id, alert, connection=connection, **kwargs)
+                    res = self._send_message(registration_id, alert, connection=connection, auth_token=auth_token, **kwargs)
                     good_registration_ids.append(registration_id)
                 except:
                     bad_registration_ids.append(registration_id)
@@ -87,12 +93,12 @@ class APNsClient(object):
         if not bad_registration_ids:
             return res
 
-        if not good_registration_ids:
+        elif not good_registration_ids:
             raise BadDeviceToken("None of the registration ids were accepted"
                                  "Rerun individual ids with ``send_message()``"
                                  "to get more details about why")
 
-        if bad_registration_ids and good_registration_ids:
+        else:
             raise PartialBulkMessage(
                 "Some of the registration ids were accepted. Rerun individual "
                 "ids with ``send_message()`` to get more details about why. "
@@ -105,6 +111,23 @@ class APNsClient(object):
                 ),
                 bad_registration_ids
             )
+
+    def get_token_from_cache(self):
+        """Do not use cache by default, just provide the function to be easily overridden"""
+        return None
+
+    def set_token_to_cache(self, token):
+        """Do not use cache by default, just provide the function to be easily overridden"""
+        pass
+
+    def _get_token(self):
+        token = self.get_token_from_cache()
+
+        if token is None:
+            token = self._create_token()
+            self.set_token_to_cache(token)
+
+        return token
 
     def _create_connection(self):
         return HTTP20Connection(self.host, force_proto=self.force_proto)
@@ -133,10 +156,10 @@ class APNsClient(object):
             mutable_content=False,
             action_loc_key=None, loc_key=None, loc_args=[], extra={}, 
             identifier=None, expiration=None, priority=10, 
-            connection=None, auth_token=None, bundle_id=None, topic=None, 
-            push_type='background'
+            connection=None, auth_token=None, bundle_id=None, topic=None, push_type='alert'
         ):
-        if not (topic or bundle_id or self.bundle_id):
+        topic = topic or bundle_id or self.bundle_id
+        if not topic:
             raise ImproperlyConfigured(
                 'You must provide your bundle_id if you do not specify a topic'
             )
@@ -145,6 +168,12 @@ class APNsClient(object):
             raise ImproperlyConfigured(
                 'You must provide push_type with either a "alert" or "background" type'
             )
+
+        if push_type not in APNS_PUSH_TYPES:
+            raise InvalidPushType('The push-type provided is not valid')
+
+        if push_type == 'voip' and not topic.endswith('.voip'):
+            raise BadTopic('Topic should be in the format <bundle_id>.voip when using voip push_type')
 
         data = {}
         aps_data = {}
@@ -188,22 +217,16 @@ class APNsClient(object):
         # If expiration isn't specified use 1 month from now
         expiration_time = expiration if expiration is not None else int(time.time()) + 2592000
 
-        auth_token = auth_token or self._create_token()
-
-        if not topic:
-            topic = bundle_id if bundle_id else self.bundle_id
+        auth_token = auth_token or self._get_token()
 
         request_headers = {
             'apns-expiration': str(expiration_time),
+            'apns-id': str(identifier or uuid.uuid4()),
             'apns-priority': str(priority),
             'apns-topic': topic,
-            'authorization': 'bearer {0}'.format(auth_token),
-            'apns-push-type': push_type
+            'apns-push-type': push_type,
+            'authorization': 'bearer {0}'.format(auth_token)
         }
-
-        if not identifier:
-            identifier = uuid.uuid4()
-        request_headers['apns-id'] = str(identifier)
 
         if connection:
             response = self._send_push_request(connection, registration_id, json_data, request_headers)
@@ -224,16 +247,11 @@ class APNsClient(object):
 
         if response.status != APNSResponse.Success:
             body = json.loads(response.read().decode('utf-8'))
-            reason = body["reason"] if "reason" in body else None
+            reason = body.get("reason")
 
             if reason:
                 exceptions_module = importlib.import_module("gobiko.apns.exceptions")
-                ExceptionClass = None
-                try:
-                    ExceptionClass = getattr(exceptions_module, reason)
-                except AttributeError:
-                    ExceptionClass = InternalException
-                raise ExceptionClass()
+                # get exception class by name
+                raise getattr(exceptions_module, reason, InternalException)
 
         return True
-
