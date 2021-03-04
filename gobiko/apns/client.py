@@ -122,7 +122,11 @@ class APNsClient(object):
                 'kid': self.auth_key_id,
             }
         )
-        return token.decode('ascii')
+
+        if isinstance(token, bytes):
+            token = token.decode('ascii')
+
+        return token
 
     def _send_message(self, registration_id, alert, 
             badge=None, sound=None, category=None, content_available=False,
