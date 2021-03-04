@@ -164,11 +164,6 @@ class APNsClient(object):
                 'You must provide your bundle_id if you do not specify a topic'
             )
         
-        if push_type not in ('alert', 'silent'):
-            raise ImproperlyConfigured(
-                'You must provide push_type with either a "alert" or "background" type'
-            )
-
         if push_type not in APNS_PUSH_TYPES:
             raise InvalidPushType('The push-type provided is not valid')
 
