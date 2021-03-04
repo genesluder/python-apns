@@ -163,7 +163,7 @@ class APNsClient(object):
             raise ImproperlyConfigured(
                 'You must provide your bundle_id if you do not specify a topic'
             )
-        
+
         if push_type not in APNS_PUSH_TYPES:
             raise InvalidPushType('The push-type provided is not valid')
 
