@@ -208,7 +208,7 @@ class APNsClient(object):
         # If expiration isn't specified use 1 month from now
         expiration_time = expiration if expiration is not None else int(time.time()) + 2592000
 
-        auth_token = auth_token or self._get_token()
+        auth_token = (auth_token or self._get_token()).decode('ascii')
 
         request_headers = {
             'apns-expiration': str(expiration_time),
