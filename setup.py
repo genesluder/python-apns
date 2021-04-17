@@ -10,7 +10,7 @@ setup(
   author = 'Gene Sluder',
   author_email = 'gene@gobiko.com',
   url = 'https://github.com/genesluder/python-apns',
-  download_url = 'https://github.com/genesluder/python-apns/tarball/0.1.3',
+  download_url = 'https://github.com/genesluder/python-apns/tarball/0.1.6',
   keywords = [
     'apns', 
     'push notifications',
