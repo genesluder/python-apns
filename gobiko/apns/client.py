@@ -249,4 +249,4 @@ class APNsClient(object):
                 # get exception class by name
                 raise getattr(exceptions_module, reason, InternalException)
 
-        return True
+        return response
