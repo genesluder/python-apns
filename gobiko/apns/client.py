@@ -6,7 +6,7 @@ import uuid
 
 from collections import namedtuple
 from contextlib import closing
-from hyper import HTTP20Connection
+from httpx import Client
 
 from .exceptions import (
     InternalException,
@@ -130,7 +130,7 @@ class APNsClient(object):
         return token
 
     def _create_connection(self):
-        return HTTP20Connection(self.host, force_proto=self.force_proto)
+        return Client(http2=True)
 
     def _create_token(self):
         token = jwt.encode(
@@ -232,16 +232,14 @@ class APNsClient(object):
         return response
 
     def _send_push_request(self, connection, registration_id, json_data, request_headers):
-        connection.request(
-            'POST', 
-            '/3/device/{0}'.format(registration_id), 
-            json_data, 
+        response = connection.post(
+            f'https://{self.host}/3/device/{registration_id}',
+            data=json_data,
             headers=request_headers
         )
-        response = connection.get_response()
 
-        if response.status != APNSResponse.Success:
-            body = json.loads(response.read().decode('utf-8'))
+        if response.status_code != APNSResponse.Success:
+            body = response.json()
             reason = body.get("reason")
 
             if reason:
