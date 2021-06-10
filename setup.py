@@ -12,13 +12,13 @@ setup(
   url = 'https://github.com/genesluder/python-apns',
   download_url = 'https://github.com/genesluder/python-apns/tarball/0.1.6',
   keywords = [
-    'apns', 
+    'apns',
     'push notifications',
   ],
   classifiers = [],
   install_requires=[
     'cryptography<=3.3.2',
-    'hyper',
+    'httpx[http2]',
     'pyjwt',
   ],
 )
